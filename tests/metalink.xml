@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metalink version="3.0" xmlns="http://www.metalinker.org/"
+          origin="http://metated.petarmaric.com/metalinks/TED-talks-grouped-by-publishing-year-in-high-quality.en.metalink" type="dynamic"
+          pubdate="Wed, 01 Sep 2010 12:13:26 -0000" refreshdate="Sun, 22 May 2016 02:00:23 -0000"
+          generator="metaTED 2.1.4">
+    <publisher>
+        <name>Petar Marić</name>
+        <url>http://www.petarmaric.com/</url>
+    </publisher>
+    <description>Download TED talks with English subtitles grouped by publishing year encoded in high quality</description>
+    <tags>TED, download, video</tags>
+    <files>
+        <file name="2016/Joe Gebbia - How Airbnb designs for trust.mp4">
+            <resources>
+                <url type="http">http://download.ted.com/talks/JoeGebbia_2016-480p-en.mp4</url>
+            </resources>
+        </file>
+    </files>
+</metalink>
