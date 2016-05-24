@@ -1,55 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from evernote.api.client import EvernoteClient
-from evernote.edam.notestore import NoteStore
 import unittest
-import re
-from urlparse import urlparse
-import xmltodict
+import logging
 
-class EvernoteTedParser(object):
-	def __init__(self, access_token, username):
-		self.access_token = access_token
-		self.username = username
-	def get_ted_notes(self):
-		client = EvernoteClient(token = self.access_token)
-		userStore = client.get_user_store()
-		user = userStore.getUser()
-		assert self.username == user.username
-
-		noteFilter = NoteStore.NoteFilter()
-		noteFilter.ascending = False
-		noteFilter.words = "TED"
-		spec = NoteStore.NotesMetadataResultSpec()
-		spec.includeTitle = True
-
-		note_store = client.get_note_store()
-		return [TedNote(note) for note in note_store.findNotesMetadata(self.access_token, noteFilter, 0, 1, spec).notes]
-
-class TedNote(object):
-	def __init__(self, note_metadata):
-		match = re.search('TEDTalks \(hd\) - ([^\|]+) \| ([^<]+)', note_metadata.title)
-		self.title = match.group(1)
-		self.speaker = match.group(2)
-
-class Metalink(object):
-	def __init__(self, node):
-		self.title = node['@name']
-		self.url = node['resources']['url']['#text']
-
-class MetalinkParser(object):
-	def __init__(self, file):
-		with open(file) as fd:
-			self.doc = xmltodict.parse(fd.read())
-
-	def get_metalink(self, ted_note):
-		file_or_files = self.doc['metalink']['files']['file'] 
-		files = file_or_files if type(file_or_files) == list else (file_or_files, )
-		for file in files:
-			print "searching for %s in [%s]: %s" % (ted_note.speaker, file, file['@name'])
-			if ted_note.speaker in file['@name']:
-				if ted_note.title in file['@name']:
-					return Metalink(file)
+import sys, os
+sys.path.insert(0,os.path.abspath(__file__+"/../.."))
+from download.ted_downloader import TedDownloader
+from parse.metalink_parser import MetalinkParser
+from parse.evernote_ted_parser import EvernoteTedParser, TedNote
 
 
 class EvernoteTest(unittest.TestCase):
@@ -69,17 +27,35 @@ class EvernoteTest(unittest.TestCase):
 		self.assertEqual('2016/Joe Gebbia - How Airbnb designs for trust.mp4', metalink.title)
 		self.assertEqual('http://download.ted.com/talks/JoeGebbia_2016-480p-en.mp4', metalink.url)
 
-	def xtest_grab_note_and_find_in_metalink(self):
+	def test_grab_note_and_find_in_metalink(self):
 		evernote_parser = EvernoteTedParser('S=s1:U=9288d:E=15c3a9bc252:C=154e2ea94e8:P=1cd:A=en-devtoken:V=2:H=c0cba7347df5a0c22cce3fd7d33771de', 
 											'daehn')
-		evernote_parser.get_ted_notes()
-		self.assertEqual('http://download.ted.com/talks/JoeGebbia_2016-480p-en.mp4', self._get_download_link(note_metadatas[0]))
+
+		metalink_parser = MetalinkParser('tests/metalink.xml')
+
+		for ted_note in evernote_parser.get_ted_notes():
+			self.assertEqual('http://download.ted.com/talks/JoeGebbia_2016-480p-en.mp4', metalink_parser.get_metalink(ted_note).url)
+	def test_download_all_ted_notes_from_metalink(self):
+		
+
+
+
+
+		evernote_parser = EvernoteTedParser('S=s1:U=9288d:E=15c3a9bc252:C=154e2ea94e8:P=1cd:A=en-devtoken:V=2:H=c0cba7347df5a0c22cce3fd7d33771de', 
+											'daehn')
+
+		ted_downloader = TedDownloader('http://metated.petarmaric.com/metalinks/TED-talks-in-high-quality.en.metalink', 'tests')
+
+		for ted_note in evernote_parser.get_ted_notes():
+			file = ted_downloader.download(ted_note)
+			self.assertTrue(os.path.exists(file))
+
 
 
 
 
 if __name__ == '__main__':
-    import logging
-    logging.basicConfig(filename = 'test_debug.log', level=logging.DEBUG)
+	import logging
+	logging.basicConfig(filename = 'test_debug.log', level=logging.DEBUG)
 
-    unittest.main()
+	unittest.main()
