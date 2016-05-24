@@ -24,7 +24,7 @@ class EvernoteTedParser(object):
 		spec.includeTitle = True
 
 		note_store = client.get_note_store()
-		return note_store.findNotesMetadata(self.access_token, noteFilter, 0, 1, spec).notes
+		return [TedNote(note) for note in note_store.findNotesMetadata(self.access_token, noteFilter, 0, 1, spec).notes]
 
 class TedNote(object):
 	def __init__(self, note_metadata):
@@ -59,12 +59,7 @@ class EvernoteTest(unittest.TestCase):
 
 
 	def test_collect_all_ted_notes_in_notebook(self):
-		note_metadata = EvernoteTedParser('S=s1:U=9288d:E=15c3a9bc252:C=154e2ea94e8:P=1cd:A=en-devtoken:V=2:H=c0cba7347df5a0c22cce3fd7d33771de', 'daehn').get_ted_notes()[0]
-
-		self.assertIn('TEDTalks (hd) - How Airbnb designs for trust | Joe Gebbia', note_metadata.title)
-
-	def test_grab_speaker_and_title_from_note(self):
-		ted_note = self.__get_ted_node('TEDTalks (hd) - How Airbnb designs for trust | Joe Gebbia')
+		ted_note = EvernoteTedParser('S=s1:U=9288d:E=15c3a9bc252:C=154e2ea94e8:P=1cd:A=en-devtoken:V=2:H=c0cba7347df5a0c22cce3fd7d33771de', 'daehn').get_ted_notes()[0]
 
 		self.assertEqual('How Airbnb designs for trust', ted_note.title)
 		self.assertEqual('Joe Gebbia', ted_note.speaker)
@@ -75,8 +70,9 @@ class EvernoteTest(unittest.TestCase):
 		self.assertEqual('http://download.ted.com/talks/JoeGebbia_2016-480p-en.mp4', metalink.url)
 
 	def xtest_grab_note_and_find_in_metalink(self):
-		note_metadatas = self._get_ted_notes('S=s1:U=9288d:E=15c3a9bc252:C=154e2ea94e8:P=1cd:A=en-devtoken:V=2:H=c0cba7347df5a0c22cce3fd7d33771de', 
+		evernote_parser = EvernoteTedParser('S=s1:U=9288d:E=15c3a9bc252:C=154e2ea94e8:P=1cd:A=en-devtoken:V=2:H=c0cba7347df5a0c22cce3fd7d33771de', 
 											'daehn')
+		evernote_parser.get_ted_notes()
 		self.assertEqual('http://download.ted.com/talks/JoeGebbia_2016-480p-en.mp4', self._get_download_link(note_metadatas[0]))
 
 
